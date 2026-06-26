@@ -24,13 +24,32 @@ FIXED_GROUP = (
     "`[]DIRECT"
 )
 
+AI_PREFIX = "custom_proxy_group=💬 Ai平台`select`"
+FIXED_AI_GROUP = "custom_proxy_group=💬 Ai平台`select`[]🚀 手动切换"
+
 
 def patch_config(text: str) -> str:
-    pattern = re.escape(TARGET_PREFIX) + r".*?(?=\s+custom_proxy_group=🚀 手动切换`select`)"
-    patched, count = re.subn(pattern, FIXED_GROUP, text, count=1)
+    patches = [
+        (
+            TARGET_PREFIX,
+            FIXED_GROUP,
+            r"(?=\s+custom_proxy_group=🚀 手动切换`select`)",
+            "节点选择",
+        ),
+        (
+            AI_PREFIX,
+            FIXED_AI_GROUP,
+            r"(?=\s+custom_proxy_group=📹 油管视频`select`)",
+            "Ai平台",
+        ),
+    ]
 
-    if count != 1:
-        raise RuntimeError("未找到 ACL4SSR 的“节点选择”代理组，可能上游格式变了。")
+    patched = text
+    for prefix, replacement, suffix, name in patches:
+        pattern = re.escape(prefix) + r".*?" + suffix
+        patched, count = re.subn(pattern, replacement, patched, count=1)
+        if count != 1:
+            raise RuntimeError(f"未找到 ACL4SSR 的“{name}”代理组，可能上游格式变了。")
 
     return patched if patched.endswith("\n") else patched + "\n"
 
